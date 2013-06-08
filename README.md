@@ -26,3 +26,8 @@ The scraper runs every night at 4am EST and takes about 4 hours to run.  Data wi
 The scrapper pulls in data from the EPA for a few short of 40,000 zipcodes across the entire US.  It then attaches latitude and longitude data to each hourly data point for that zipcode.
 
 If you would like additional API's added, please put them in the [issues] (https://github.com/thequbit/epauvindex/issues).  Thanks, and enjoy!
+
+
+#### shoutouts
+
+The idea for this comes from another project that came out of the National Day of Civic Hacking at RIT.  That project can be found [here] (https://github.com/FOSSRIT/ndoch-epa).  Shout out to Nate Case, Remy DeCausemaker, and David Gay for getting their project started with only 24 hours to do it!
