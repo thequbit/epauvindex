@@ -28,7 +28,7 @@ def getuvdata(zipcode):
     url = "http://iaspub.epa.gov/enviro/efservice/getEnvirofactsUVHOURLY/ZIP/{0}/json".format(zipcode)
     data = ""
     try:
-        data = json.load(urllib2.urlopen(url))
+        data = json.load(urllib2.urlopen(url,timeout=10))
     except:
         data = "ERROR"
     return data
@@ -56,21 +56,28 @@ def saveuvindices(zcodes):
     for zcode in zcodes:
         zipcodeid,zipcode,_city,_state,lat,lng,timezone,dst = zcode
         today = datetime.datetime.now().date().isoformat()
+        print "[INFO   ] Working on {0} ...".format(zipcode)
         if uvi.checkexists(zipcode,today) == False:
             hourly = getuvdata(zipcode)
-            while hourly == "ERROR":
-                print "[WARNING] HTTP error, retrying `{0}`".format(zipcode)
-                time.sleep(1)
+            erronthis = 0
+            while hourly == "ERROR" and erronthis < 6:
+                print "[WARNING] HTTP error, retrying `{0}` (attempt: {1})".format(zipcode,erronthis)
+                time.sleep(4)
                 hourly = getuvdata(zipcode)
+                erronthis += 1
+            if erronthis >= 6:
                 errors += 1
-            if len(hourly) == 0:
                 if ndz.checkexists(zipcode) == False:
-                    ndz.add(zipcode,zipcodeid)            
-                print "[WARNING] No UV data for `{0}`".format(zipcode)
+                    ndz.add(zipcode,zipcodeid)
             else:
-                for hourdata in hourly:
-                    d,t = decodedt(hourdata['DATE_TIME'])
-                    uvi.add(zipcode,lat,lng,zipcodeid,d,t,hourdata['UV_VALUE'])
+                if len(hourly) == 0:
+                    if ndz.checkexists(zipcode) == False:
+                        ndz.add(zipcode,zipcodeid)            
+                    print "[WARNING] No UV data for `{0}`".format(zipcode)
+                else:
+                    for hourdata in hourly:
+                        d,t = decodedt(hourdata['DATE_TIME'])
+                        uvi.add(zipcode,lat,lng,zipcodeid,d,t,hourdata['UV_VALUE'])
         else:
             print "[INFO   ] Skipping duplicate UV Index for `{0}`".format(zipcode)
         count += 1
@@ -82,6 +89,13 @@ def split_list(alist, wanted_parts=1):
              for i in range(wanted_parts) ]
 
 def main(argv):
+
+    if len(argv) != 2:
+        print "Usage:\n\n\tpython scraper.py <chuck>\n\n\t<chunk> - 1 or 2 represents which chuck of zipcodes to work on.\n\n"
+        return
+    else:
+        chunk = int(argv[1])
+
     print "[SCRAPER] Starting Scrapper ..."
 
     startdt = datetime.datetime.now().isoformat()
@@ -92,11 +106,19 @@ def main(argv):
 
     print "[SCRAPER] Successfully returned {0} zipcodes.".format(len(zcodes))
 
-    print "[SCRAPER] Starting scrapper ..."
+    if chunk == 1:
+        workload = zcodes[0:len(zcodes)/2]
+    elif chunk == 2:
+        workload = zcodes[len(zcodes)/2:]
+    else:
+        print "Invalid Chunk number, please select 1 or 2.  Exiting."
+        return
 
-    count,httperrors = saveuvindices(zcodes)
+    print "[SCRAPER] Starting scraper.  Working on {0} zipcodes.".format(len(workload))
 
-    print "[SCRAPER] Scraper finished scraping `{0}` zipcodes successfully.".format(count)
+    count,httperrors = saveuvindices(workload)
+
+    print "[SCRAPER] Scraper finished scraping {0} zipcodes successfully.".format(count)
 
     stopdt = datetime.datetime.now().isoformat()
 
