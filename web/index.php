@@ -1,12 +1,33 @@
+
+<?php
+
+	$date = $_GET['date'];
+	
+	if( $date == "")
+	{
+		$date = date("Y-m-d");
+	}
+
+?>
+
 <html>
 <head>
+
+	<title>EPA UV Index Heat Map</title>
+	<meta name="description" content="EPA UV Index Heat Map">
+
+	<link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+
 </head>
 <body>
 
 	<center>
 	
-		<br><br><h3>United States UV Index Heat Map for <?php echo date("l F j, Y",strtotime(date("Y-m-d"))) ?></h3><br>
+		<br><br><h3>New York State UV Index Heat Map for <?php echo date("l F j, Y",strtotime($date)) ?></h3><br>
 
+		<br><br><button onclick="displayheatmap();">Display UV Heat Map</button>
+
+        <!--
 		<div id="controls" style="width: 800px; margin: auto;">
 		
 			<select name="stateselect" id="stateselect">
@@ -68,7 +89,8 @@
 			<br><br>
 		
 		</div>
-
+        -->
+		
 		<div id="heatmapArea" style="width: 800px; height: 600px; margin: auto;"></div>
 
 	</center>
@@ -80,16 +102,12 @@
 
 	<script type="text/javascript">
 	
-		$("#btndisplay").click( function() {
-			displayheatmap( $('#stateselect').val() );
-		});
-		
 		// standard gmaps initialization
-		var myLatlng = new google.maps.LatLng(40.4230, -98.7372);
+		var myLatlng = new google.maps.LatLng(42.3482, -75.1890);
 		
 		// define map properties
 		var myOptions = {
-		  zoom: 4,
+		  zoom: 6,
 		  center: myLatlng,
 		  mapTypeId: google.maps.MapTypeId.ROADMAP,
 		  disableDefaultUI: false,
@@ -111,7 +129,11 @@
 		var heatmap = new HeatmapOverlay(map, {
 			"radius":20,
 			"visible":true, 
-			"opacity":60
+			"opacity":60,
+			"legend": {
+				"position": 'br',
+				"title": 'UV Index Values'
+			}
 		});
 		
 		var mapready = false;
@@ -123,9 +145,11 @@
 			
 		});
 
-		function displayheatmap(state)
+		function displayheatmap()
 		{
-			url = "http://mycodespace.net/projects/epauvindex/api/getstate.php?date=<?php echo date("Y-m-d"); ?>&hour=13&state=" + state;
+			//window.clearInterval()
+		
+			url = "http://mycodespace.net/projects/epauvindex/api/getstate.php?date=<? echo $date; ?>&hour=13&state=NY";
 			//alert(url);
 			$.getJSON(url, function (response) {
 			
@@ -143,6 +167,7 @@
 			});
 		}
 		
+		//window.setInterval(displayheatmap(),2500);
 
 	</script>
 </body>
